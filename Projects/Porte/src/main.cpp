@@ -4,12 +4,32 @@
 #define RST_PIN         5          // Configurable, see typical pin layout above
 #define SS_PIN          53         // Configurable, see typical pin layout above
 
+#define ESP_SERIAL_TIMEOUT 100
+#define SERIAL_SPEED 9600
+
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 
 MFRC522::MIFARE_Key key; 
 
 // Init array that will store new NUID 
 byte nuidPICC[4];
+
+
+void process_serial3_events() {
+  String buffer;
+  unsigned long begin = millis();
+  while (Serial3.available() && millis() - begin < ESP_SERIAL_TIMEOUT) {
+    char c = Serial3.read();
+    // Serial.print(c);
+    buffer += c;
+    if (c == ']') {
+      Serial.print(buffer);
+      // handle command
+      buffer = "";
+      Serial.print("\n");
+    }
+  }
+}
 
 void printHex(byte *buffer, byte bufferSize) {
   for (byte i = 0; i < bufferSize; i++) {
@@ -31,7 +51,8 @@ void printDec(byte *buffer, byte bufferSize) {
 
 
 void setup() { 
-  Serial.begin(9600);
+  Serial.begin(SERIAL_SPEED);
+  Serial3.begin(9600);
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
 
@@ -42,10 +63,11 @@ void setup() {
   Serial.println(F("This code scan the MIFARE Classsic NUID."));
   Serial.print(F("Using the following key:"));
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+  Serial.print(F("Using the following key:\n"));
 }
  
 void loop() {
-
+  process_serial3_events();
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! rfid.PICC_IsNewCardPresent())
     return;
@@ -57,7 +79,7 @@ void loop() {
   Serial.print(F("PICC type: "));
   MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
   Serial.println(rfid.PICC_GetTypeName(piccType));
-
+  
   // Check is the PICC of Classic MIFARE type
   if (piccType != MFRC522::PICC_TYPE_MIFARE_MINI &&  
     piccType != MFRC522::PICC_TYPE_MIFARE_1K &&
