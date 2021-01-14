@@ -115,5 +115,28 @@ void loop() {
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
 }
+void SendSQLRFID(char* codeRFID){
+    if (codeRFID=NULL){
+        return;
+    }else{
+        char* SQLQ="[SELECT code FROM Users WHERE Hexa=\"";
+        SQLQ=strcat(SQLQ,codeRFID);
+        char* temp="\";]";
+        SQLQ=strcat(SQLQ,temp);
+        Serial3.print(SQLQ);
+        return;
+    }
+}
+
+void SmbgotIn(char* codeRFID){
+    if (codeRFID=NULL){
+        return;
+    }else{
+      char* SQLQ = "[INSERT INTO Logs (User_ID) VALUES ((SELECT ID from Users WHERE hexa =\""
+      SQLQ=strcat(SQLQ,codeRFID);
+      char* temp="\";]";
+      SQLQ=strcat(SQLQ,temp);
+    }
+}
 
 
