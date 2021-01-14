@@ -31,23 +31,21 @@ void connect() {
 }
 
 void message_received(String &topic, String &payload) {
-  Serial.print("[FWD:");
-  // Serial.print(topic);
-  // Serial.print(":");
+  Serial.print("[");
   Serial.print(payload);
   Serial.println("]");
 }
 
-String serial_buffer = "";
-void process_serial_events() {
-  while (Serial.available()) {
-    char c = Serial.read();
-    if (c != '\n') { // newlines are ignored
-      serial_buffer += c;
-      if (c == ']') {
-        mqtt_client.publish(MQTT_TOPIC_OUT, serial_buffer);
-        serial_buffer = "";
-      }
+String serial_buffer="";
+void process_serial_events(){
+  while (Serial.available()){
+    char c=Serial.read();
+    if (c!="[" && c!='\n'){//start of msg an \n ignored
+      if (c=="]"){//end of msg
+        mqtt_client.publish(MQTT_TOPIC_OUT,serial_buffer);
+        serial_buffer="";
+      }else{
+        Serial_buffer+=c;
     }
   }
 }
@@ -84,3 +82,4 @@ void loop() {
   process_serial_events();
   send_alive();
 }
+

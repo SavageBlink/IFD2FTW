@@ -1,0 +1,7 @@
+{
+    "C_Cpp.default.systemIncludePath": [
+        "C:/Users/usernamedir/.platformio/packages/toolchain-xtensa32/xtensa-esp32-elf/include/c++/5.2.0/",
+        "C:/Users/usernamedir/.platformio/packages/toolchain-xtensa32/xtensa-esp32-elf/include/c++/5.2.0/xtensa-esp32-elf/",
+        "C:/Users/usernamedir/.platformio/packages/toolchain-xtensa32/lib/gcc/xtensa-esp32-elf/5.2.0/include/",
+       ]
+}
