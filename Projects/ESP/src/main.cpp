@@ -52,6 +52,7 @@ void process_serial_events() {
   }
 }
 
+
 unsigned long last_alive = 0;
 void send_alive() {
   if (millis() - last_alive > 10000) {
@@ -63,6 +64,7 @@ void send_alive() {
   }
 }
 
+
 void setup() {
   Serial.begin(SPEED);
   WiFi.begin(SSID, WIFI_PASS);
@@ -72,6 +74,7 @@ void setup() {
   connect();
   Serial.println("[ESP:WELCOME]");
 }
+
 
 void loop() {
   mqtt_client.loop();
