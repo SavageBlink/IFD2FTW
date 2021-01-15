@@ -21,7 +21,7 @@ byte nuidPICC[4];
 int ID = -1;
 
 void SmbgotIn(){
-  String SQLQ = "[INSERT INTO Logs (User_ID) VALUES ((SELECT ID from Users WHERE hexa =\"";
+  String SQLQ = "[INSERT INTO Logs (Users_ID) VALUES(";
   Serial3.print(SQLQ);  
 }
 
@@ -35,22 +35,13 @@ void OpenDoor(String DBr){
     delay(200);
     digitalWrite(OPEN_PIN,LOW);
     SmbgotIn();
-    String temp="\";]";
+    String temp=");]";
     String buffer;
-    char* parser = strcpy(parser,DBr.c_str());
-    int i=0;
-    while (parser[i]!=':'){
-      i++;
-      Serial.print(parser[i]);
-    }
-    i++;
-    while(parser[i]!='}'){
-      buffer += parser[i];
-      Serial.print(parser[i]);
-      i++; 
-    }
-    Serial.print(buffer);
-    Serial3.print(buffer);
+    int i = DBr.indexOf(':');
+    int j = DBr.indexOf('}');
+    DBr = DBr.substring(i+1,j);
+    Serial.print(DBr);
+    Serial3.print(DBr);
     Serial3.print(temp);
   }
 }
