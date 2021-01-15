@@ -4,6 +4,10 @@
 #define RST_PIN         5          // Configurable, see typical pin layout above
 #define SS_PIN          53         // Configurable, see typical pin layout above
 
+#define OPEN_PIN         2          // Configurable, see typical pin layout above
+#define CLOSE_PIN        3
+
+
 #define ESP_SERIAL_TIMEOUT 100
 #define SERIAL_SPEED 9600
 
@@ -14,8 +18,53 @@ MFRC522::MIFARE_Key key;
 // Init array that will store new NUID 
 byte nuidPICC[4];
 
+int ID = -1;
 
-void process_serial3_events() {
+void SmbgotIn(){
+  String SQLQ = "[INSERT INTO Logs (User_ID) VALUES ((SELECT ID from Users WHERE hexa =\"";
+  Serial3.print(SQLQ);  
+}
+
+void OpenDoor(String DBr){
+  if (strlen(DBr.c_str()) > 2){
+    digitalWrite(OPEN_PIN,HIGH);
+    delay(200);
+    digitalWrite(OPEN_PIN,LOW);
+    delay(200);
+    digitalWrite(CLOSE_PIN,HIGH);
+    delay(200);
+    digitalWrite(OPEN_PIN,LOW);
+    SmbgotIn();
+    String temp="\";]";
+    String buffer;
+    char* parser = strcpy(parser,DBr.c_str());
+    int i=0;
+    while (parser[i]!=':'){
+      i++;
+      Serial.print(parser[i]);
+    }
+    i++;
+    while(parser[i]!='}'){
+      buffer += parser[i];
+      Serial.print(parser[i]);
+      i++; 
+    }
+    Serial.print(buffer);
+    Serial3.print(buffer);
+    Serial3.print(temp);
+  }
+}
+
+
+
+
+
+void SendSQLRFID(){
+  String SQLQ="[SELECT ID FROM Users WHERE Hexa=\"";
+  Serial3.print(SQLQ);
+}
+
+String process_serial3_events() {
   String buffer;
   unsigned long begin = millis();
   while (Serial3.available() && millis() - begin < ESP_SERIAL_TIMEOUT) {
@@ -24,6 +73,8 @@ void process_serial3_events() {
     buffer += c;
     if (c == ']') {
       Serial.print(buffer);
+      Serial.print("\n");
+      return buffer;
       // handle command
       buffer = "";
       Serial.print("\n");
@@ -31,12 +82,15 @@ void process_serial3_events() {
   }
 }
 
+
 void printHex(byte *buffer, byte bufferSize) {
+  SendSQLRFID();
+  String END="\";]";
   for (byte i = 0; i < bufferSize; i++) {
     Serial.print(buffer[i] < 0x10 ? " 0" : " ");
     Serial.print(buffer[i], HEX); //Serial3.print for esp
     Serial3.print(buffer[i], HEX);
-  }
+  }Serial3.print(END);
 }
 
 /**
@@ -55,7 +109,8 @@ void setup() {
   Serial3.begin(9600);
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
-
+  pinMode(OPEN_PIN, OUTPUT);
+  pinMode(CLOSE_PIN, OUTPUT);
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
@@ -67,7 +122,10 @@ void setup() {
 }
  
 void loop() {
-  process_serial3_events();
+  String Dbr = process_serial3_events();
+  OpenDoor(Dbr);
+  //int I = getDataSQLfromESP();
+  //Serial.print(I);
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! rfid.PICC_IsNewCardPresent())
     return;
@@ -115,28 +173,7 @@ void loop() {
   // Stop encryption on PCD
   rfid.PCD_StopCrypto1();
 }
-void SendSQLRFID(char* codeRFID){
-    if (codeRFID=NULL){
-        return;
-    }else{
-        char* SQLQ="[SELECT code FROM Users WHERE Hexa=\"";
-        SQLQ=strcat(SQLQ,codeRFID);
-        char* temp="\";]";
-        SQLQ=strcat(SQLQ,temp);
-        Serial3.print(SQLQ);
-        return;
-    }
-}
 
-void SmbgotIn(char* codeRFID){
-    if (codeRFID=NULL){
-        return;
-    }else{
-      char* SQLQ = "[INSERT INTO Logs (User_ID) VALUES ((SELECT ID from Users WHERE hexa =\""
-      SQLQ=strcat(SQLQ,codeRFID);
-      char* temp="\";]";
-      SQLQ=strcat(SQLQ,temp);
-    }
-}
+
 
 

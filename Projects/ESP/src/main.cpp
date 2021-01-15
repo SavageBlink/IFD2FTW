@@ -15,39 +15,32 @@ const char MQTT_TOPIC_OUT[] = "hender/out";
 const char MQTT_TOPIC_ALIVE[] = "hender/alive";
 
 void connect() {
-  Serial.println("[DBG:ESP:Trying to connect to wifi]");
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[DBG:ESP:Trying to connect to wifi]");
     delay(100);
   }
-
-  Serial.println("[DBG:ESP:Wifi connected, trying to connect to MQTT...]");
   while (!mqtt_client.connect(BOARDNAME, USERNAME, PASSWORD)) {
-    Serial.println("[DBG:ESP:Wifi connected, trying to connect to MQTT...]");
     delay(100);
   }
-  Serial.println("[DBG:ESP:MQTT connected!]");
   mqtt_client.subscribe(MQTT_TOPIC_IN);
 }
 
 void message_received(String &topic, String &payload) {
-  Serial.print("[");
   Serial.print(payload);
-  Serial.println("]");
 }
 
 String serial_buffer="";
 void process_serial_events(){
   while (Serial.available()){
     char c=Serial.read();
-    if (c!="[" && c!='\n'){//start of msg an \n ignored
-      if (c=="]"){//end of msg
+    if (c!='[' && c!='\n'){//start of msg an \n ignored
+      if (c==']'){//end of msg
         mqtt_client.publish(MQTT_TOPIC_OUT,serial_buffer);
         serial_buffer="";
       }else{
-        Serial_buffer+=c;
+        serial_buffer+=c;
     }
   }
+}
 }
 
 
@@ -70,7 +63,6 @@ void setup() {
   mqtt_client.begin(HOSTNAME, 1883, wifi_client);
   mqtt_client.onMessage(message_received);
   connect();
-  Serial.println("[ESP:WELCOME]");
 }
 
 
