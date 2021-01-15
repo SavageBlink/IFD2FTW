@@ -1,5 +1,8 @@
 #include <SPI.h>
 #include <MFRC522.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <string.h>
 
 #define RST_PIN         5          // Configurable, see typical pin layout above
 #define SS_PIN          53         // Configurable, see typical pin layout above
@@ -10,6 +13,40 @@
 
 #define ESP_SERIAL_TIMEOUT 100
 #define SERIAL_SPEED 9600
+
+#define SCREEN_WIDTH 128 
+#define SCREEN_HEIGHT 64 
+#define OLED_RESET     5
+
+#define LOADING 0
+#define IDLE 1
+
+Adafruit_SSD1306 OLED(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+void oledSetup(){
+  if(!OLED.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+  OLED.clearDisplay();
+  OLED.setTextSize(1);                      // choix de la taille des caractères
+  OLED.setTextWrap(true);                  // disable text wrap
+  OLED.setTextColor(WHITE, BLACK);          // set text color to white and black background
+  OLED.setCursor(0,0);
+  OLED.display();
+}
+
+void oledPrint(const char* window, const char* text){
+  OLED.clearDisplay();
+  OLED.setCursor(0,0);
+  OLED.print(window);
+  OLED.setCursor(0,20);
+  OLED.print(text);
+  OLED.display();
+}
+
+
+
 
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 
@@ -43,6 +80,11 @@ void OpenDoor(String DBr){
     Serial.print(DBr);
     Serial3.print(DBr);
     Serial3.print(temp);
+    oledPrint("Nickel ^^ ","Je suis Ouverte");
+    delay(1000);
+  }else if (strlen(DBr.c_str()) == 2){
+    oledPrint("Nop !","Mauvaise carte");
+    delay(1000);
   }
 }
 
@@ -96,6 +138,7 @@ void printDec(byte *buffer, byte bufferSize) {
 
 
 void setup() { 
+   oledSetup();
   Serial.begin(SERIAL_SPEED);
   Serial3.begin(9600);
   SPI.begin(); // Init SPI bus
@@ -105,7 +148,7 @@ void setup() {
   for (byte i = 0; i < 6; i++) {
     key.keyByte[i] = 0xFF;
   }
-
+  oledPrint("Bonjour !","Je suis une porte :3");
   Serial.println(F("This code scan the MIFARE Classsic NUID."));
   Serial.print(F("Using the following key:"));
   printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
@@ -115,6 +158,7 @@ void setup() {
 void loop() {
   String Dbr = process_serial3_events();
   OpenDoor(Dbr);
+  oledPrint("J'aime les cartes","Donne moi une carte");
   //int I = getDataSQLfromESP();
   //Serial.print(I);
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
